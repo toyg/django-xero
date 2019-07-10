@@ -196,3 +196,6 @@ dmypy.json
 # PyPI
 .pypirc
 
+.DS_Store
+.idea
+**/.DS_Store
