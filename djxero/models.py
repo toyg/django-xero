@@ -18,6 +18,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import CASCADE
 from encrypted_model_fields.fields import EncryptedTextField
+from xero import Xero
 from xero.auth import PublicCredentials
 
 DATETIME_FIELDS = ['oauth_expires_at', 'oauth_authorization_expires_at']
@@ -167,4 +168,17 @@ class XeroUser(models.Model):
 
     @property
     def token(self):
+        """
+        Get a dict with the current token info
+        :return: dict
+        """
         return json.loads(self.last_token, object_hook=_datetime_parser_hook)
+
+    @property
+    def client(self):
+        """
+        Get a ready-made xero.Xero object
+        :return: xero.Xero instance
+        """
+        return Xero(credentials=PublicCredentials(**self.token),
+                    user_agent=get_xero_consumer_key())
