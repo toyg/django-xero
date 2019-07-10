@@ -16,12 +16,20 @@ the view `xero-logout` (again with an optional `next`).
 There is also a `@xero_required` decorator for views, which will automatically 
 check if an active Xero session is present. If not, it will redirect to an interstitial page
 asking the user to do the authentication dance. You can control that page by creating a 
-custom template `xero/interstitial.html`.
+custom template `xero/interstitial.html`. 
+
+Once authorized, in your view you will get a `.xerouser` attribute which you can use to do stuff like:
+```python
+client = request.user.xerouser.client
+contacts = client.contacts.all()
+``` 
+That client is a preconfigured `xero.Xero` object from [pyxero](https://github.com/freakboy3742/pyxero).
 
 Some details will be exposed in `User` instances under `.xerouser`, but the Xero mechanisms
-are such that it's all pretty meaningless. For the same reasons, note that 
-***you must have some other registration mechanism to create an 
-authenticated user first*** (e.g. regular login page or anything else); this package only extends 
+are such that it's all pretty meaningless - there is currently no way to know anything about the user 
+from the xero session alone. For that reason, note that 
+***you must have some other registration mechanism to create a regular Django
+ user first*** (e.g. regular login page with some other auth system); this package only extends 
 that `User` instance to attach a temporary Xero session.
 
 ## Supported Platforms
