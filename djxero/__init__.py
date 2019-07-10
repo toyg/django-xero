@@ -1,4 +1,4 @@
-VERSION = (0, 0, 1)
+VERSION = (0, 0, 2)
 
 __title__ = 'django-xero'
 __version_info__ = VERSION
