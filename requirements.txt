@@ -1,0 +1,4 @@
+Django>=2.2.3,<3.0
+cryptography>=2.7,<3.0
+django-encrypted-model-fields>=0.5.8,<0.6
+pyxero>=0.9.1,<1.0

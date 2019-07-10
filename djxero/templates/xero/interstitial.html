@@ -1,0 +1,12 @@
+<html>
+<head>
+	<title>Authorize Xero</title>
+</head>
+<body>
+<div class="content">
+	Please click the button below to enable Xero.
+	You will be redirected to Xero for authorization.
+</div>
+<button><a href="{% url 'xero-auth-start' %}?next={{ next }}">Go to Xero</a></button>
+</body>
+</html>
