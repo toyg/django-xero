@@ -6,12 +6,13 @@ This package allows users to authenticate to Xero via a Public App that you have
 registered on the [Xero Developer Portal](https://developer.xero.com).
 
 Whenever you want to trigger authentication with Xero, just redirect to the view 
-`xero-auth-start` and this package will do the rest. 
+`xero_auth_start` (either directly or via `resolve('xero-auth-start')` and this package 
+will do the rest. 
 The view also accepts an optional `next`parameter to control where the user will land 
 on successful authentication; otherwise it will redirect to `/`.
 
 Xero sessions last for 30 minutes, but if you want to end them earlier, POST to 
-the view `xero-logout` (again with an optional `next`).
+the view `xero_logout` (again with an optional `next`).
 
 There is also a `@xero_required` decorator for views, which will automatically 
 check if an active Xero session is present. If not, it will redirect to an interstitial page
