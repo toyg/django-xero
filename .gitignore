@@ -193,4 +193,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# PyPI
+.pypirc
 
