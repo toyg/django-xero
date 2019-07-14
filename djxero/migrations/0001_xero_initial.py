@@ -38,6 +38,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('last_token', encrypted_model_fields.fields.EncryptedTextField(blank=True, default='', help_text='JSON with last successful login details (so you can check if still logged on). ')),
+                ('xero_id', models.CharField(max_length=255, blank=True, null=True, help_text="User ID in Xero. Note that this has to be manually retrieved with custom logic, because there is no way to find it from a token; so it's blank by default.")),
                 ('org', models.CharField(blank=True, help_text='Identifier for the org the user belongs to, in theory', max_length=255, null=True)),
                 ('created_on', models.DateTimeField(auto_now_add=True)),
                 ('updated_on', models.DateTimeField(auto_now=True)),

@@ -140,6 +140,12 @@ class XeroUser(models.Model):
                                     help_text="JSON with last successful login "
                                               "details (so you can check if "
                                               "still logged on). ")
+    xero_id = models.CharField(max_length=255, blank=True, null=True,
+                               help_text="User ID in Xero. "
+                                         "Note that this has to be manually "
+                                         "retrieved with custom logic, because "
+                                         "there is no way to find it from "
+                                         "a token; so it's blank by default.")
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
 
@@ -182,3 +188,29 @@ class XeroUser(models.Model):
         """
         return Xero(credentials=PublicCredentials(**self.token),
                     user_agent=get_xero_consumer_key())
+
+    def guess_user_details(self):
+        """
+        Xero provides no way to find user details from a token, but if we
+        have a prepopulated user we can make an educated guess.
+        This is not foolproof, of course, which is why we don't automatically
+        set the xero_id field.
+        Use at your own risk.
+        :return: dict with user details that we *think* might be from the user
+                who generated the token, or None if not found anything
+        """
+        filters = [
+            # django_field_name, xero_field_name
+            ('email', 'emailaddress'),
+            ('first_name', 'firstname'),
+            ('last_name', 'lastname')
+        ]
+
+        params = {xerokey: getattr(self.user, djkey)
+                  for djkey, xerokey in filters}
+
+        result = self.client.users.filter(**params)
+        if len(result) > 0:
+            return result[0]
+        return None
+
