@@ -40,6 +40,10 @@ from the xero session alone. For that reason, note that
  user first*** (e.g. regular login page with some other auth system); this package only extends 
 that `User` instance to attach a temporary Xero session.
 
+If your User model has the same email or firstname/lastname as recorded in Xero,
+you can try to guess its details with `request.user.xerouser.guess_user()` and then manually save the ID
+in `request.user.xerouser.xero_id`, but the heuristic is very basic and may or may not work.
+
 ## Supported Platforms
 * Python 3.7 (should work on 3.5/3.6 too, but is untested).
 * Django 2
@@ -99,7 +103,8 @@ We stand on the shoulders of the following giants:
        ...
     ]
     ```
-    
+
+
  ## Issues
  For problems, file an issue on [GitHub](https://github.com/toyg/django-xero).
  The author is available for hire (hint hint).
