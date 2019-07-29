@@ -146,6 +146,10 @@ class XeroUser(models.Model):
                                          "retrieved with custom logic, because "
                                          "there is no way to find it from "
                                          "a token; so it's blank by default.")
+    xero_email = models.EmailField(max_length=255, blank=True, null=True,
+                                   help_text="Email registered with Xero. "
+                                             "If present, it overrides "
+                                             "User.email when dealing with Xero")
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
 
@@ -209,8 +213,20 @@ class XeroUser(models.Model):
         params = {xerokey: getattr(self.user, djkey)
                   for djkey, xerokey in filters}
 
-        result = self.client.users.filter(**params)
-        if len(result) > 0:
-            return result[0]
+        if self.xero_email:
+            params['emailaddress'] = self.xero_email
+
+        while True:
+            result = self.client.users.filter(**params)
+            if len(result) > 0:
+                return result[0]
+
+            if params.get('emailaddress', None):
+                # try again with just the email
+                params.pop('firstname')
+                params.pop('lastname')
+            else:
+                break
+
         return None
 
