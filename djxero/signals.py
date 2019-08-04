@@ -10,12 +10,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from django.apps import AppConfig
+from django.contrib.auth.signals import user_logged_out
+from django.dispatch import receiver
 
 
-class DjxeroConfig(AppConfig):
-    name = 'djxero'
-
-    def ready(self):
-        import djxero.signals
-        return super().ready()
+@receiver(user_logged_out)
+def djxero_logout(sender, request, user, **kwargs):
+    if user.xerouser:
+        user.xerouser.last_token = None
+        user.xerouser.save()

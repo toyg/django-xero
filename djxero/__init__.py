@@ -9,3 +9,4 @@ __copyright__ = 'Copyright (c) 2019 Giacomo Lacava <giac@autoepm.com>'
 
 __doc__ = """Xero integration for Django"""
 
+default_app_config = 'djxero.apps.DjxeroConfig'
