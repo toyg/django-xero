@@ -11,8 +11,10 @@
 #  limitations under the License.
 
 import json
+import logging
 from datetime import datetime
 
+import requests
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
@@ -20,6 +22,8 @@ from django.db.models import CASCADE
 from encrypted_model_fields.fields import EncryptedTextField
 from xero import Xero
 from xero.auth import PublicCredentials
+
+logger = logging.getLogger(__name__)
 
 DATETIME_FIELDS = ['oauth_expires_at', 'oauth_authorization_expires_at']
 
@@ -195,8 +199,8 @@ class XeroUser(models.Model):
 
     def guess_user_details(self):
         """
-        Xero provides no way to find user details from a token, but if we
-        have a prepopulated user we can make an educated guess.
+        Xero provides no way to find user details from a oauth1.0 token, but
+        if we have a prepopulated user we can make an educated guess.
         This is not foolproof, of course, which is why we don't automatically
         set the xero_id field.
         Use at your own risk.
@@ -230,3 +234,84 @@ class XeroUser(models.Model):
 
         return None
 
+    def _request_data(self, verb, url, **kwargs):
+        """
+        Utility for authenticated calls to Xero apis not yet supported by
+        pyxero, getting json back. Note that pagination is NOT handled.
+
+        :param verb: 'get','post',...
+        :param url: url to call
+        :param kwargs: extra parameters to pass to requests
+        :return: list of returned json dicts
+        """
+        result = self._request(verb, url, **kwargs)
+        if result.status_code != 200:
+            raise Exception(f"Unexpected response: "
+                            f"{result.status_code} {result.text}\n"
+                            f"Call was: {verb} {url}\n"
+                            f"Args: {kwargs}")
+        data = result.json()
+        if settings.DEBUG:
+            from pprint import pprint
+            pprint(data)
+        return data
+
+    def _request(self, verb, url, **kwargs):
+        """
+        Utility for authenticated calls to Xero apis not yet supported by pyxero
+        :param verb: 'get','post',...
+        :param url: url to call
+        :param kwargs: extra parameters to pass to requests
+        :return: list of returned json dicts
+        """
+        creds = self.accounts.credentials
+        try:
+            result = getattr(
+                requests, verb.lower()
+            )(url, auth=creds.oauth,
+              headers={'User-Agent': creds.consumer_key},
+              **kwargs)
+            return result
+        except Exception as e:
+            logger.exception(e)
+            return None
+
+
+class XeroProjectsUser(models.Model):
+    """ It turns out that the Projects API has different IDs..."""
+    xerouser = models.OneToOneField(XeroUser, on_delete=CASCADE,
+                                    null=False, blank=False,
+                                    related_name='prjuser',
+                                    help_text="Regular Xero user ID")
+    prj_user_id = models.UUIDField(help_text="Xero user ID in the Projects API")
+
+    BASE_URI = "https://api.xero.com/projects.xro/2.0"
+
+    def guess_projects_user_details(self):
+        """
+        Xero provides no way to find user details from a oauth1.0 token, but
+        if we have a prepopulated user we can make an educated guess.
+        This is not foolproof, of course, which is why we don't automatically
+        fill it up. Use at your own risk.
+
+        :return: dict with user details that we *think* might be from the user
+                who generated the token, or None if not found anything"""
+        page = 1
+        pagesize = 50
+        end_page = 2
+        email_lookup = self.xerouser.xero_email or self.xerouser.user.email
+        if not email_lookup:
+            raise Exception("You cannot guess a Projects user without an email "
+                            "set. Add a value to XeroUser.xero_email or "
+                            "User.email, and try again.")
+        while page <= end_page:
+            url = f'{self.BASE_URI}/projectsusers?page={page}&pagesize={pagesize}'
+            result = self.xerouser._request_data('get', url)
+            for user in result['items']:
+                if user['email'] == email_lookup:
+                    return user['userId']
+            # not found? next page
+            end_page = result['pageCount']
+            page += 1
+        # still here ? Not found
+        return None

@@ -13,6 +13,7 @@
 from django.apps import AppConfig
 
 
+# noinspection PyUnresolvedReferences
 class DjxeroConfig(AppConfig):
     name = 'djxero'
 
