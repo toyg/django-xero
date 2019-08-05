@@ -279,15 +279,14 @@ class XeroUser(models.Model):
 
 class XeroProjectsUser(models.Model):
     """ It turns out that the Projects API has different IDs..."""
-    xerouser = models.OneToOneField(XeroUser, on_delete=CASCADE,
-                                    null=False, blank=False,
-                                    related_name='prjuser',
-                                    help_text="Regular Xero user ID")
+    xerouser = models.ForeignKey(XeroUser, on_delete=CASCADE,
+                                 related_name='prjuser',
+                                 help_text="Regular Xero user ID")
     prj_user_id = models.UUIDField(help_text="Xero user ID in the Projects API")
 
     BASE_URI = "https://api.xero.com/projects.xro/2.0"
 
-    def guess_projects_user_details(self):
+    def guess_projects_user_id(self):
         """
         Xero provides no way to find user details from a oauth1.0 token, but
         if we have a prepopulated user we can make an educated guess.

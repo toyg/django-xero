@@ -33,16 +33,30 @@ def my_view(request):
 ``` 
 That client is a preconfigured `xero.Xero` object from [pyxero](https://github.com/freakboy3742/pyxero).
 
-Some details will be exposed in `User` instances under `.xerouser`, but the Xero mechanisms
-are such that it's all pretty meaningless - there is currently no way to know anything about the user 
-from the xero session alone. For that reason, note that 
 ***you must have some other registration mechanism to create a regular Django
  user first*** (e.g. regular login page with some other auth system); this package only extends 
 that `User` instance to attach a temporary Xero session.
 
-If your User model has the same email or firstname/lastname as recorded in Xero,
-you can try to guess its details with `request.user.xerouser.guess_user()` and then manually save the ID
-in `request.user.xerouser.xero_id`, but the heuristic is very basic and may or may not work.
+Some details will be exposed in `User` instances under `.xerouser`, but the Xero OAuth1 mechanism
+makes it difficult to reflect on the authenticated user. If your User model has the same email or 
+firstname/lastname as recorded in Xero, you can try to guess its details. 
+The heuristic is very basic and may or may not work:
+```python
+# try to guess user details
+details_dict = xerouser.guess_user_details()
+
+# the Projects API also has a separate ID, so there is an attached model
+from djxero.models import XeroProjectsUser
+xero_prj_user = XeroProjectsUser(xerouser=xerouser)
+xero_prj_user.prj_user_id = xero_prj_user.guess_projects_user_id()
+xero_prj_user.save()
+# now you can retrieve the Projects-related ID from the main user object:
+def myview(request):
+   ...
+   # note you can have multiple IDs if you have multiple Orgs, so it's a linked with a ForeignKey
+   prj_user_id = request.user.xerouser.prjuser.first().prj_user_id
+   ...
+```
 
 ## Supported Platforms
 * Python 3.7 (should work on 3.5/3.6 too, but is untested).
