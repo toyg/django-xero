@@ -264,7 +264,7 @@ class XeroUser(models.Model):
         :param kwargs: extra parameters to pass to requests
         :return: list of returned json dicts
         """
-        creds = self.accounts.credentials
+        creds = self.client.accounts.credentials
         try:
             result = getattr(
                 requests, verb.lower()
